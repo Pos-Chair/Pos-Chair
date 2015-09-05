@@ -1,16 +1,23 @@
+#include <SoftwareSerial.h>
+#include <String.h>
+
 #define trigPin 9
 #define echoPin 5
-#define corePin A0
+
+SoftwareSerial ser(0,1);
+
+char s[10];
 
 void setup() {
   Serial.begin (9600);
+  ser.begin(9600);
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  pinMode(corePin, OUTPUT);
 }
 
 void loop() {
   double duration, distance;
+  float maxDis = 30.00;
   digitalWrite(trigPin, LOW);  // Added this line
   delayMicroseconds(2); // Added this line
   digitalWrite(trigPin, HIGH);
@@ -19,14 +26,17 @@ void loop() {
   duration = pulseIn(echoPin, HIGH);
   distance = (duration/2) / 29.1;
 
-  if (distance >= 200 || distance <= 0){
-    Serial.println("Out of range");
-    analogWrite(corePin, -1);
+  if (distance >= maxDis || distance <= 0){
+    ser.write(-1);
   }
   else {
-    Serial.print(distance);
-    Serial.println(" cm");
-    analogWrite(corePin, distance*100); //in 0.1 mm
+    char *c = (char *) &distance;
+    strncpy(s, c, 8);
+    s[8] = '!';
+    s[9] = '\0';
+    ser.write(s);
+    Serial.println(distance);
+    Serial.println(s);
   }
-  delay(200);
+  delay(400);
 }
